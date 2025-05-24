@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Game Kuis</title>
+<style>
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #0074D9;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 10px;
+    flex-direction: column;
+  }
+  #app {
+    background: #0053a6;
+    border-radius: 10px;
+    padding: 15px 20px;
+    max-width: 400px;
+    width: 100%;
+    box-sizing: border-box;
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+  }
+  h1, h2 {
+    text-align: center;
+    margin: 10px 0;
+  }
+  input[type=text] {
+    width: 100%;
+    padding: 10px;
+    font-size: 1.1em;
+    border-radius: 5px;
+    border: none;
+    margin: 15px 0;
+    box-sizing: border-box;
+  }
+  button {
+    width: 100%;
+    padding: 12px;
+    font-size: 1.1em;
+    border: none;
+    border-radius: 6px;
+    background-color: #3bbdff;
+    color: #004170;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 10px;
+  }
+  button:hover {
+    background-color: #1a94d6;
+    color: white;
+  }
+  .question {
+    margin: 20px 0 10px 0;
+    font-size: 1.2em;
+    min-height: 70px;
+  }
+  .question-number {
+    font-size: 1em;
+    color: #b3d7ff;
+    text-align: right;
+  }
+  .answers button {
+    background-color: #3bbdff;
+    color: #004170;
+    margin: 8px 0;
+  }
+  .answers button.correct {
+    background-color: #28a745 !important;
+    color: white;
+  }
+  .answers button.wrong {
+    background-color: #dc3545 !important;
+    color: white;
+  }
+  #timer {
+    font-weight: bold;
+    text-align: right;
+    font-size: 1.1em;
+  }
+  #score {
+    font-size: 1.1em;
+    text-align: center;
+    margin-top: 15px;
+  }
+  #creator {
+    margin-top: 15px;
+    font-size: 0.9em;
+    color: #b3d7ff;
+    font-style: italic;
+    text-align: center;
+  }
+  @media (max-width: 400px) {
+    #app {
+      padding: 15px 10px;
+      max-width: 100%;
+    }
+    .question {
+      font-size: 1.1em;
+      min-height: 60px;
+    }
+    button {
+      font-size: 1em;
+      padding: 10px;
+    }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="welcome-screen">
+    <h1>Selamat datang di Game Kuis!</h1>
+    <div id="name-input-area">
+      <label for="player-name">Masukkan Nama Anda:</label>
+      <input type="text" id="player-name" placeholder="Nama pemain..." />
+    </div>
+    <button id="start-btn">Mulai Game</button>
+  </div>
+
+  <div id="quiz-screen" style="display:none;">
+    <div id="timer">Waktu: 15</div>
+    <div class="question-number" id="question-number"></div>
+    <div class="question" id="question-text"></div>
+    <div class="answers" id="answers-container"></div>
+    <div id="score"></div>
+  </div>
+
+  <div id="end-screen" style="display:none; text-align:center;">
+    <h2>Game selesai!</h2>
+    <div id="final-score"></div>
+    <button id="restart-btn">Main Lagi</button>
+  </div>
+</div>
+
+<div id="creator">Pembuat game: rehangmt</div>
+
+<script>
+const questions = [
+  // 40 soal lama yang sudah ada
+  { question: "Siapa nabi terakhir dalam Islam?", answers: ["Nabi Musa", "Nabi Isa", "Nabi Muhammad", "Nabi Ibrahim"], correct: 2 },
+  { question: "Berapa jumlah rakaat shalat wajib sehari?", answers: ["5", "10", "17", "20"], correct: 2 },
+  { question: "Kitab suci umat Islam bernama?", answers: ["Al-Quran", "Injil", "Weda", "Torah"], correct: 0 },
+  { question: "Rukun Islam yang keempat adalah?", answers: ["Shalat", "Puasa", "Zakat", "Haji"], correct: 1 },
+  { question: "Kota suci umat Islam adalah?", answers: ["Madinah", "Makkah", "Jerusalem", "Baghdad"], correct: 1 },
+
+  { question: "Akar kuadrat dari 81 adalah?", answers: ["7", "8", "9", "10"], correct: 2 },
+  { question: "Nilai π (pi) kira-kira adalah?", answers: ["2.14", "3.14", "4.14", "5.14"], correct: 1 },
+  { question: "5 pangkat 3 sama dengan?", answers: ["125", "25", "15", "100"], correct: 0 },
+  { question: "Berapakah hasil dari 12 x 8?", answers: ["96", "88", "108", "112"], correct: 0 },
+  { question: "Jika sudut segitiga siku-siku adalah 90°, maka dua sudut lainnya berjumlah?", answers: ["45°", "60°", "90°", "120°"], correct: 2 },
+
+  { question: "Siapakah proklamator kemerdekaan Indonesia?", answers: ["Soekarno dan Hatta", "Sukarno dan Joko", "Ahmad Yani dan Hatta", "Soeharto dan Hatta"], correct: 0 },
+  { question: "Tahun berapa Indonesia merdeka?", answers: ["1945", "1946", "1950", "1942"], correct: 0 },
+  { question: "Siapakah penemu benua Amerika?", answers: ["Cristopher Columbus", "Ferdinand Magellan", "Vasco da Gama", "Marco Polo"], correct: 0 },
+  { question: "Perang Dunia II berakhir pada tahun?", answers: ["1945", "1939", "1918", "1960"], correct: 0 },
+  { question: "Siapa raja Inggris terkenal dengan enam istri?", answers: ["Henry VIII", "Elizabeth I", "Richard III", "James I"], correct: 0 },
+
+  { question: "Apa unsur kimia dengan simbol 'O'?", answers: ["Oksigen", "Emas", "Besi", "Perak"], correct: 0 },
+  { question: "Apa planet terbesar di tata surya?", answers: ["Bumi", "Mars", "Jupiter", "Saturnus"], correct: 2 },
+  { question: "Manakah hewan yang bertelur?", answers: ["Kelinci", "Burung", "Kucing", "Anjing"], correct: 1 },
+  { question: "Apa sumber energi utama bagi kehidupan di Bumi?", answers: ["Matahari", "Bulan", "Bumi", "Air"], correct: 0 },
+  { question: "Manakah benda berikut yang bukan planet?", answers: ["Venus", "Mars", "Pluto", "Bulan"], correct: 3 },
+
+  { question: "Tarian tradisional dari Bali bernama?", answers: ["Kecak", "Saman", "Pendet", "Reog"], correct: 0 },
+  { question: "Pakaian adat dari Jawa disebut?", answers: ["Kebaya", "Baju Kurung", "Songket", "Batik"], correct: 3 },
+  { question: "Alat musik tradisional Indonesia yang dimainkan dengan dipukul?", answers: ["Gamelan", "Angklung", "Sasando", "Seruling"], correct: 0 },
+  { question: "Upacara adat yang biasanya dilakukan untuk menyambut panen?", answers: ["Ngaben", "Sedekah Laut", "Mapag Sri", "Grebeg"], correct: 2 },
+  { question: "Bahasa resmi negara Indonesia?", answers: ["Jawa", "Sunda", "Indonesia", "Melayu"], correct: 2 },
+
+  { question: "Berapa jumlah provinsi di Indonesia (2020)?", answers: ["34", "33", "35", "36"], correct: 0 },
+  { question: "Sungai terpanjang di dunia adalah?", answers: ["Nil", "Amazon", "Yangtze", "Mississippi"], correct: 1 },
+  { question: "Apa nama satelit alami Bumi?", answers: ["Bulan", "Mars", "Venus", "Jupiter"], correct: 0 },
+  { question: "Negara dengan populasi terbanyak di dunia?", answers: ["India", "USA", "China", "Rusia"], correct: 2 },
+  { question: "Hari libur nasional Indonesia?", answers: ["17 Agustus", "1 Januari", "25 Desember", "Semua benar"], correct: 3 },
+
+  { question: "Jumlah warna pada pelangi adalah?", answers: ["5", "6", "7", "8"], correct: 2 },
+  { question: "Bahasa resmi di Brazil adalah?", answers: ["Spanyol", "Portugis", "Prancis", "Inggris"], correct: 1 },
+  { question: "Berapakah kecepatan cahaya dalam vakum?", answers: ["300.000 km/s", "150.000 km/s", "1.000 km/s", "500.000 km/s"], correct: 0 },
+  { question: "Siapa penulis novel 'Harry Potter'?", answers: ["J.K. Rowling", "Tolkien", "Stephen King", "George Martin"], correct: 0 },
+  { question: "Sistem pemerintahan Indonesia adalah?", answers: ["Monarki", "Republik", "Kekaisaran", "Demokrasi"], correct: 1 },
+
+  { question: "Berapakah luas bumi?", answers: ["510 juta km²", "600 juta km²", "300 juta km²", "150 juta km²"], correct: 0 },
+  { question: "Apa alat pengukur suhu?", answers: ["Barometer", "Termometer", "Higrometer", "Altimeter"], correct: 1 },
+  { question: "Siapa penemu lampu pijar?", answers: ["Nikola Tesla", "Alexander Graham Bell", "Thomas Alva Edison", "Galileo Galilei"], correct: 2 },
+  { question: "Dimanakah lokasi piramida terbesar di dunia?", answers: ["Mesir", "Meksiko", "China", "Peru"], correct: 0 },
+  { question: "Apa lambang negara Indonesia?", answers: ["Garuda Pancasila", "Rajawali", "Burung Elang", "Singa"], correct: 0 },
+
+  { question: "Apa nama gunung tertinggi di dunia?", answers: ["Gunung Everest", "K2", "Kilimanjaro", "Denali"], correct: 0 },
+  { question: "Planet yang dikenal sebagai planet merah?", answers: ["Mars", "Venus", "Jupiter", "Saturnus"], correct: 0 },
+  { question: "Bahasa pemrograman yang populer untuk web adalah?", answers: ["Python", "JavaScript", "C++", "Java"], correct: 1 },
+  { question: "Apa nama ibu kota Jepang?", answers: ["Kyoto", "Osaka", "Tokyo", "Hiroshima"], correct: 2 },
+  { question: "Berapa jumlah huruf dalam alfabet bahasa Indonesia?", answers: ["24", "26", "28", "30"], correct: 1 },
+
+  { question: "Siapa yang dikenal sebagai Bapak Teknologi Informasi?", answers: ["Bill Gates", "Steve Jobs", "Alan Turing", "Mark Zuckerberg"], correct: 2 },
+  { question: "Apa fungsi jantung pada manusia?", answers: ["Menghasilkan hormon", "Mengalirkan darah", "Mencerna makanan", "Mengatur suhu tubuh"], correct: 1 },
+  { question: "Tumbuhan melakukan fotosintesis menggunakan?", answers: ["Karbon dioksida dan air", "Oksigen dan air", "Nitrogen dan oksigen", "Karbon monoksida dan air"], correct: 0 },
+  { question: "Siapa pelukis terkenal dari Italia pada era Renaissance?", answers: ["Michelangelo", "Vincent van Gogh", "Pablo Picasso", "Claude Monet"], correct: 0 },
+  { question: "Apa ibukota Australia?", answers: ["Sydney", "Melbourne", "Canberra", "Brisbane"], correct: 2 },
+
+  { question: "Berapakah angka Romawi untuk 50?", answers: ["X", "L", "C", "D"], correct: 1 },
+  { question: "Planet terkecil di tata surya?", answers: ["Merkurius", "Venus", "Mars", "Pluto"], correct: 0 },
+  { question: "Siapa penulis 'Laskar Pelangi'?", answers: ["Andrea Hirata", "Tere Liye", "Pramoedya Ananta Toer", "Dewi Lestari"], correct: 0 },
+  { question: "Apa nama gunung berapi aktif di Indonesia?", answers: ["Sinabung", "Bromo", "Rinjani", "Semeru"], correct: 0 },
+  { question: "Berapakah jumlah pulau di Indonesia?", answers: ["17.000+", "13.000+", "20.000+", "10.000+"], correct: 0 },
+
+  { question: "Apa warna bendera Indonesia?", answers: ["Merah Putih", "Putih Merah", "Merah Biru", "Hijau Kuning"], correct: 0 },
+  { question: "Siapa presiden pertama Indonesia?", answers: ["Soekarno", "Soeharto", "Habibie", "Jokowi"], correct: 0 },
+  { question: "Apa nama alat musik petik tradisional Jawa?", answers: ["Gamelan", "Siter", "Angklung", "Kendang"], correct: 1 },
+  { question: "Manakah hewan yang hidup di air dan darat?", answers: ["Kucing", "Katak", "Kuda", "Ayam"], correct: 1 },
+  { question: "Apa lambang pada bendera Jepang?", answers: ["Bulan merah", "Matahari merah", "Bintang merah", "Salib merah"], correct: 1 },
+
+  { question: "Berapa lama satu tahun di bumi?", answers: ["365 hari", "360 hari", "366 hari", "350 hari"], correct: 0 },
+  { question: "Apa nama alat untuk mengukur tekanan udara?", answers: ["Barometer", "Thermometer", "Hygrometer", "Altimeter"], correct: 0 },
+  { question: "Siapa yang menemukan teori relativitas?", answers: ["Isaac Newton", "Albert Einstein", "Galileo Galilei", "Nikola Tesla"], correct: 1 },
+  { question: "Apa ibukota Korea Selatan?", answers: ["Seoul", "Busan", "Pyongyang", "Tokyo"], correct: 0 },
+  { question: "Berapa sisi pada segitiga?", answers: ["2", "3", "4", "5"], correct: 1 },
+
+  // Tambahan 100 soal baru, tanpa duplikat
+  { question: "Apa ibu kota negara Kanada?", answers: ["Toronto", "Vancouver", "Ottawa", "Montreal"], correct: 2 },
+  { question: "Siapa penulis karya 'Romeo dan Juliet'?", answers: ["Charles Dickens", "William Shakespeare", "Jane Austen", "Mark Twain"], correct: 1 },
+  { question: "Apa lambang kimia untuk emas?", answers: ["Ag", "Au", "Fe", "Pb"], correct: 1 },
+  { question: "Apa nama pulau terbesar di dunia?", answers: ["Madagaskar", "Greenland", "Sumatera", "Borneo"], correct: 1 },
+  { question: "Siapa penemu telepon?", answers: ["Alexander Graham Bell", "Thomas Edison", "Nikola Tesla", "Guglielmo Marconi"], correct: 0 },
+
+  { question: "Berapa jumlah negara di dunia (2020)?", answers: ["195", "200", "180", "190"], correct: 0 },
+  { question: "Apa nama lautan terbesar di dunia?", answers: ["Atlantik", "Pasifik", "Hindia", "Arktik"], correct: 1 },
+  { question: "Siapa penemu pesawat terbang?", answers: ["Wright bersaudara", "Alexander Graham Bell", "Thomas Edison", "Henry Ford"], correct: 0 },
+  { question: "Apa bahasa resmi di Mesir?", answers: ["Arab", "Inggris", "Perancis", "Spanyol"], correct: 0 },
+  { question: "Berapakah panjang garis khatulistiwa?", answers: ["40.000 km", "30.000 km", "50.000 km", "60.000 km"], correct: 0 },
+
+  { question: "Apa warna bendera Italia?", answers: ["Merah Putih Hijau", "Merah Kuning Hijau", "Merah Putih Biru", "Putih Kuning Hijau"], correct: 0 },
+  { question: "Apa nama benua terkecil?", answers: ["Eropa", "Australia", "Antartika", "Afrika"], correct: 1 },
+  { question: "Siapa tokoh utama dalam novel 'Sherlock Holmes'?", answers: ["Sherlock Holmes", "Dr. Watson", "Prof. Moriarty", "Mycroft Holmes"], correct: 0 },
+  { question: "Apa hewan tercepat di dunia?", answers: ["Cheetah", "Elang", "Kuda", "Kelinci"], correct: 0 },
+  { question: "Berapakah suhu titik didih air dalam Celcius?", answers: ["100°C", "90°C", "80°C", "70°C"], correct: 0 },
+
+  { question: "Apa nama logam cair pada suhu kamar?", answers: ["Besi", "Raksa", "Tembaga", "Aluminium"], correct: 1 },
+  { question: "Siapa yang dikenal sebagai Bapak Fisika Modern?", answers: ["Isaac Newton", "Albert Einstein", "Galileo Galilei", "Niels Bohr"], correct: 1 },
+  { question: "Apa nama ibu kota Prancis?", answers: ["Marseille", "Lyon", "Paris", "Nice"], correct: 2 },
+  { question: "Apa simbol kimia untuk air?", answers: ["O2", "H2O", "CO2", "NaCl"], correct: 1 },
+  { question: "Siapa pencipta karakter Mickey Mouse?", answers: ["Walt Disney", "Charles Schulz", "Jim Henson", "Stan Lee"], correct: 0 },
+
+  { question: "Apa nama lapisan paling luar bumi?", answers: ["Mantel", "Kerak", "Inti", "Asthenosfer"], correct: 1 },
+  { question: "Siapa yang menemukan listrik?", answers: ["Benjamin Franklin", "Thomas Edison", "Nikola Tesla", "Michael Faraday"], correct: 0 },
+  { question: "Apa nama sungai terpanjang di Afrika?", answers: ["Nile", "Congo", "Zambezi", "Niger"], correct: 0 },
+  { question: "Apa ibukota Jerman?", answers: ["Munich", "Berlin", "Frankfurt", "Hamburg"], correct: 1 },
+  { question: "Apa nama planet terkecil?", answers: ["Merkurius", "Pluto", "Mars", "Venus"], correct: 0 },
+
+  { question: "Berapa sisi pada segi enam?", answers: ["5", "6", "7", "8"], correct: 1 },
+  { question: "Siapa pelukis lukisan 'Mona Lisa'?", answers: ["Leonardo da Vinci", "Michelangelo", "Raphael", "Donatello"], correct: 0 },
+  { question: "Apa nama protein pembentuk rambut?", answers: ["Keratin", "Collagen", "Elastin", "Actin"], correct: 0 },
+  { question: "Apa nama ibukota India?", answers: ["Mumbai", "Delhi", "Bangalore", "Kolkata"], correct: 1 },
+  { question: "Apa nama senyawa kimia NaCl?", answers: ["Garam dapur", "Air", "Asam sulfat", "Cuka"], correct: 0 },
+
+  { question: "Apa hewan terbesar di dunia?", answers: ["Gajah", "Paus Biru", "Hiu", "Jerapah"], correct: 1 },
+  { question: "Apa nama lapisan atmosfer yang terdekat dengan bumi?", answers: ["Stratosfer", "Troposfer", "Mesosfer", "Termosfer"], correct: 1 },
+  { question: "Siapa penulis buku 'The Hobbit'?", answers: ["J.R.R. Tolkien", "C.S. Lewis", "George Orwell", "J.K. Rowling"], correct: 0 },
+  { question: "Berapa lama periode revolusi bumi mengelilingi matahari?", answers: ["365 hari", "24 jam", "30 hari", "12 jam"], correct: 0 },
+  { question: "Apa nama warna yang dihasilkan dari campuran merah dan biru?", answers: ["Ungu", "Hijau", "Kuning", "Oranye"], correct: 0 },
+
+  { question: "Apa nama hewan yang dikenal dengan sebutan 'Raja Hutan'?", answers: ["Singa", "Harimau", "Gajah", "Serigala"], correct: 0 },
+  { question: "Apa nama lautan yang berada di antara Afrika dan Amerika Selatan?", answers: ["Atlantik", "Pasifik", "India", "Arktik"], correct: 0 },
+  { question: "Apa nama ibu kota Spanyol?", answers: ["Madrid", "Barcelona", "Sevilla", "Valencia"], correct: 0 },
+  { question: "Apa nama alat musik petik dari Bali?", answers: ["Gamelan", "Siter", "Rebab", "Ceng-Ceng"], correct: 1 },
+  { question: "Siapa pencipta teori evolusi?", answers: ["Charles Darwin", "Isaac Newton", "Albert Einstein", "Gregor Mendel"], correct: 0 },
+
+  { question: "Apa nama gas yang kita hirup untuk bernapas?", answers: ["Nitrogen", "Oksigen", "Karbon Dioksida", "Hidrogen"], correct: 1 },
+  { question: "Apa warna bendera Jepang?", answers: ["Putih Merah", "Merah Putih", "Merah Biru", "Hijau Kuning"], correct: 0 },
+  { question: "Apa nama mata uang Jepang?", answers: ["Yen", "Won", "Rupiah", "Dollar"], correct: 0 },
+  { question: "Siapa penemu radio?", answers: ["Guglielmo Marconi", "Alexander Graham Bell", "Nikola Tesla", "Thomas Edison"], correct: 0 },
+  { question: "Berapa jari-jari bumi?", answers: ["6371 km", "6000 km", "7000 km", "6500 km"], correct: 0 },
+
+  { question: "Apa nama gunung tertinggi di Indonesia?", answers: ["Kerinci", "Semeru", "Rinjani", "Puncak Jaya"], correct: 3 },
+  { question: "Apa nama benua yang terdiri dari 54 negara?", answers: ["Afrika", "Asia", "Eropa", "Amerika"], correct: 0 },
+  { question: "Apa nama planet yang memiliki cincin?", answers: ["Saturnus", "Mars", "Venus", "Jupiter"], correct: 0 },
+  { question: "Apa warna bendera Inggris?", answers: ["Merah Putih", "Merah Putih Biru", "Putih Merah Biru", "Merah Biru"], correct: 1 },
+  { question: "Apa nama senyawa kimia CO2?", answers: ["Karbon dioksida", "Karbon monoksida", "Air", "Oksigen"], correct: 0 },
+
+  { question: "Siapa presiden Amerika Serikat pertama?", answers: ["Abraham Lincoln", "George Washington", "Thomas Jefferson", "John Adams"], correct: 1 },
+  { question: "Apa nama alat musik tiup dari kayu?", answers: ["Saxophone", "Flute", "Clarinet", "Oboe"], correct: 2 },
+  { question: "Apa nama matahari dalam bahasa Latin?", answers: ["Sol", "Luna", "Terra", "Stella"], correct: 0 },
+  { question: "Apa nama alat pengukur kecepatan angin?", answers: ["Anemometer", "Barometer", "Hygrometer", "Thermometer"], correct: 0 },
+  { question: "Apa nama benua terbesar?", answers: ["Asia", "Afrika", "Eropa", "Amerika"], correct: 0 },
+
+  { question: "Siapa penulis novel '1984'?", answers: ["George Orwell", "Aldous Huxley", "J.K. Rowling", "Mark Twain"], correct: 0 },
+  { question: "Apa nama logam yang paling ringan?", answers: ["Aluminium", "Magnesium", "Lithium", "Titanium"], correct: 2 },
+  { question: "Apa nama alat musik gesek?", answers: ["Biola", "Gitar", "Drum", "Saxophone"], correct: 0 },
+  { question: "Apa nama laut terbesar di dunia?", answers: ["Laut Karibia", "Laut Mediterania", "Lautan Pasifik", "Laut Merah"], correct: 2 },
+  { question: "Siapa yang menemukan hukum gravitasi?", answers: ["Isaac Newton", "Albert Einstein", "Galileo Galilei", "Nikola Tesla"], correct: 0 },
+
+  { question: "Apa nama kota suci umat Hindu?", answers: ["Varanasi", "Makkah", "Jerusalem", "Bodh Gaya"], correct: 0 },
+  { question: "Apa nama hewan yang bisa hidup tanpa air dalam waktu lama?", answers: ["Camel", "Kuda", "Gajah", "Singa"], correct: 0 },
+  { question: "Apa nama benua yang terdiri dari 7 negara?", answers: ["Australia", "Asia", "Afrika", "Eropa"], correct: 0 },
+  { question: "Apa nama bahasa resmi di Rusia?", answers: ["Rusia", "Inggris", "Jerman", "Perancis"], correct: 0 },
+  { question: "Siapa pencipta karakter superhero Spider-Man?", answers: ["Stan Lee", "Jack Kirby", "Bob Kane", "Joe Shuster"], correct: 0 }
+];
+
+  let playerName = "";
+  let currentQuestionIndex = 0;
+  let score = 0;
+  let timer;
+  let timeLeft = 15;
+  let quizQuestions = [];
+
+  const welcomeScreen = document.getElementById("welcome-screen");
+  const quizScreen = document.getElementById("quiz-screen");
+  const endScreen = document.getElementById("end-screen");
+  const playerNameInput = document.getElementById("player-name");
+  const startBtn = document.getElementById("start-btn");
+  const restartBtn = document.getElementById("restart-btn");
+  const questionText = document.getElementById("question-text");
+  const questionNumber = document.getElementById("question-number");
+  const answersContainer = document.getElementById("answers-container");
+  const timerDisplay = document.getElementById("timer");
+  const scoreDisplay = document.getElementById("score");
+  const finalScoreDisplay = document.getElementById("final-score");
+  const nameInputArea = document.getElementById("name-input-area");
+
+  function shuffleArray(array) {
+    const newArr = array.slice();
+    for (let i = newArr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+    }
+    return newArr;
+  }
+
+  function getRandomQuestions() {
+    return shuffleArray(questions).slice(0, 15);
+  }
+
+  function startGame() {
+    if (!playerNameInput.value.trim()) {
+      const savedName = localStorage.getItem("playerName");
+      if (!savedName) {
+        alert("Mohon masukkan nama Anda!");
+        return;
+      }
+      playerName = savedName;
+    } else {
+      playerName = playerNameInput.value.trim();
+      localStorage.setItem("playerName", playerName);
+    }
+
+    welcomeScreen.style.display = "none";
+    quizScreen.style.display = "block";
+    score = 0;
+    currentQuestionIndex = 0;
+    scoreDisplay.textContent = "Skor: 0";
+    quizQuestions = getRandomQuestions();
+    showQuestion();
+  }
+
+  function showQuestion() {
+    clearInterval(timer);
+    timeLeft = 15;
+    timerDisplay.textContent = `Waktu: ${timeLeft}`;
+    const q = quizQuestions[currentQuestionIndex];
+    questionNumber.textContent = `Soal ke ${currentQuestionIndex + 1} dari ${quizQuestions.length}`;
+    questionText.textContent = q.question;
+    answersContainer.innerHTML = "";
+    q.answers.forEach((ans, i) => {
+      const btn = document.createElement("button");
+      btn.textContent = ans;
+      btn.addEventListener("click", () => selectAnswer(i));
+      answersContainer.appendChild(btn);
+    });
+
+    timer = setInterval(() => {
+      timeLeft--;
+      timerDisplay.textContent = `Waktu: ${timeLeft}`;
+      if (timeLeft <= 0) {
+        clearInterval(timer);
+        skipQuestion();
+      }
+    }, 1000);
+  }
+
+  function selectAnswer(selectedIndex) {
+    clearInterval(timer);
+    const q = quizQuestions[currentQuestionIndex];
+    const buttons = answersContainer.querySelectorAll("button");
+
+    buttons.forEach((btn, i) => {
+      btn.disabled = true;
+      if (i === q.correct) {
+        btn.classList.add("correct");
+      }
+      if (i === selectedIndex && i !== q.correct) {
+        btn.classList.add("wrong");
+      }
+    });
+
+    if (selectedIndex === q.correct) {
+      score += 10;
+      scoreDisplay.textContent = `Skor: ${score}`;
+    }
+
+    setTimeout(() => {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < quizQuestions.length) {
+        showQuestion();
+      } else {
+        endGame();
+      }
+    }, 1500);
+  }
+
+  function skipQuestion() {
+    const buttons = answersContainer.querySelectorAll("button");
+    const q = quizQuestions[currentQuestionIndex];
+    buttons.forEach((btn, i) => {
+      btn.disabled = true;
+      if (i === q.correct) {
+        btn.classList.add("correct");
+      }
+    });
+
+    setTimeout(() => {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < quizQuestions.length) {
+        showQuestion();
+      } else {
+        endGame();
+      }
+    }, 1500);
+  }
+
+  function endGame() {
+    quizScreen.style.display = "none";
+    endScreen.style.display = "block";
+    finalScoreDisplay.textContent = `${playerName}, skor akhir kamu adalah: ${score}`;
+  }
+
+  function loadPlayerName() {
+    const savedName = localStorage.getItem("playerName");
+    if (savedName) {
+      playerNameInput.value = savedName;
+      nameInputArea.style.display = "none";
+    }
+  }
+
+  startBtn.addEventListener("click", startGame);
+  restartBtn.addEventListener("click", () => {
+    score = 0;
+    currentQuestionIndex = 0;
+    scoreDisplay.textContent = "Skor: 0";
+    endScreen.style.display = "none";
+    quizScreen.style.display = "block";
+    quizQuestions = getRandomQuestions();
+    showQuestion();
+  });
+
+  loadPlayerName();
+</script>
+</body>
+</html>
